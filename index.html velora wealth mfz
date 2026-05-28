@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>VELORA WEALTH™</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8B5CF6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --purple:#8B5CF6;--mint:#34D399;--blue:#60A5FA;
+  --card:rgba(255,255,255,0.75);--text:#111827;--sub:#6b7280;--input-bg:#f1f5f9;
+}
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#eef2ff,#fdf2f8,#ecfeff);
+  min-height:100vh;color:var(--text);overflow-x:hidden;transition:0.4s;
+}
+body.dark{
+  background:linear-gradient(135deg,#0f172a,#111827,#1e293b);
+  --card:rgba(30,41,59,0.72);--text:#f3f4f6;--sub:#cbd5e1;--input-bg:#1e293b;
+}
+
+/* AUTH SCREEN */
+.auth-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#eef2ff,#fdf2f8,#ecfeff);
+}
+body.dark .auth-screen{background:linear-gradient(135deg,#0f172a,#111827,#1e293b);}
+.auth-box{
+  background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);
+  padding:40px;border-radius:28px;width:100%;max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.1);border:1px solid rgba(255,255,255,0.3);
+}
+body.dark .auth-box{background:rgba(30,41,59,0.9);}
+.auth-logo{
+  font-family:'Sora',sans-serif;font-size:32px;font-weight:800;
+  background:linear-gradient(90deg,#8B5CF6,#60A5FA,#34D399);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:8px;
+}
+.auth-sub{color:var(--sub);font-size:14px;margin-bottom:28px;}
+.auth-tabs{display:flex;gap:8px;margin-bottom:24px;}
+.auth-tab{
+  flex:1;padding:10px;border:none;border-radius:12px;font-weight:600;
+  font-size:14px;cursor:pointer;background:var(--input-bg);color:var(--sub);transition:0.2s;
+}
+.auth-tab.active{background:var(--purple);color:white;}
+.auth-error{
+  background:#fee2e2;color:#dc2626;padding:12px 16px;
+  border-radius:12px;font-size:13px;margin-bottom:12px;display:none;
+}
+.auth-success{
+  background:#d1fae5;color:#059669;padding:12px 16px;
+  border-radius:12px;font-size:13px;margin-bottom:12px;display:none;
+}
+
+/* APP */
+.app{display:flex;min-height:100vh;}
+.sidebar{
+  width:260px;position:fixed;top:0;left:0;bottom:0;
+  padding:28px 20px;background:rgba(255,255,255,0.72);
+  backdrop-filter:blur(18px);border-right:1px solid rgba(255,255,255,0.2);
+  overflow-y:auto;z-index:999;display:flex;flex-direction:column;gap:4px;
+}
+body.dark .sidebar{background:rgba(15,23,42,0.92);}
+.content{margin-left:260px;width:100%;padding:36px;}
+.logo{
+  font-family:'Sora',sans-serif;font-size:28px;font-weight:800;
+  background:linear-gradient(90deg,#8B5CF6,#60A5FA,#34D399);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:24px;
+}
+.user-info{
+  padding:12px 16px;border-radius:14px;background:var(--input-bg);
+  font-size:12px;color:var(--sub);margin-bottom:8px;word-break:break-all;
+}
+.menu-btn{
+  width:100%;padding:13px 16px;border:none;border-radius:14px;
+  background:transparent;cursor:pointer;font-size:14px;font-weight:600;
+  text-align:left;transition:0.25s;color:var(--text);
+}
+.menu-btn:hover,.menu-btn.active-nav{background:#ede9fe;transform:translateX(4px);}
+body.dark .menu-btn:hover,body.dark .menu-btn.active-nav{background:#312e81;}
+.page{display:none;animation:fade 0.35s ease;}
+.page.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.glass{
+  background:var(--card);backdrop-filter:blur(16px);padding:24px;
+  border-radius:24px;box-shadow:0 8px 24px rgba(0,0,0,0.07);
+  border:1px solid rgba(255,255,255,0.25);margin-bottom:20px;
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+h1{font-size:40px;margin-bottom:16px;font-family:'Sora',sans-serif;}
+h2{font-size:22px;margin-bottom:14px;font-family:'Sora',sans-serif;}
+h3{font-size:16px;font-weight:700;margin-bottom:6px;}
+p{line-height:1.7;color:var(--sub);font-size:14px;}
+.stat-value{font-size:32px;font-weight:800;font-family:'Sora',sans-serif;margin-top:8px;}
+.stat-label{font-size:12px;color:var(--sub);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+input,select,textarea{
+  width:100%;padding:13px 16px;border:none;outline:none;border-radius:14px;
+  font-size:14px;margin-bottom:12px;font-family:'Inter',sans-serif;
+  background:var(--input-bg);color:var(--text);transition:0.2s;
+}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(139,92,246,0.2);}
+label{font-size:13px;font-weight:600;color:var(--sub);display:block;margin-bottom:6px;}
+.btn{
+  padding:13px 20px;border:none;border-radius:14px;
+  background:linear-gradient(90deg,var(--purple),var(--blue));
+  color:white;font-weight:700;cursor:pointer;transition:0.25s;font-size:14px;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(139,92,246,0.35);}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:10px;}
+.btn-danger{background:linear-gradient(90deg,#f87171,#ef4444);}
+table{width:100%;border-collapse:collapse;}
+th{padding:12px 16px;text-align:left;font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+td{padding:13px 16px;font-size:14px;border-top:1px solid rgba(0,0,0,0.05);}
+body.dark td{border-top:1px solid rgba(255,255,255,0.05);}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+.badge-purple{background:#ede9fe;color:#7c3aed;}
+.badge-green{background:#d1fae5;color:#059669;}
+.action-btn{padding:7px 12px;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;margin-right:4px;}
+.edit-btn{background:#dbeafe;color:#2563eb;}
+.delete-btn{background:#fee2e2;color:#dc2626;}
+.progress-bar{width:100%;height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:12px 0;}
+body.dark .progress-bar{background:#374151;}
+.progress{height:100%;background:linear-gradient(90deg,#8B5CF6,#34D399);border-radius:999px;transition:width 0.4s;}
+.reflection-item{padding:18px;border-radius:18px;background:rgba(255,255,255,0.55);margin-bottom:14px;}
+body.dark .reflection-item{background:#1e293b;}
+.month-filter{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.month-filter input[type=month]{width:auto;margin-bottom:0;}
+.insight-card{border-left:4px solid var(--purple);padding:16px 20px;border-radius:0 16px 16px 0;background:var(--input-bg);margin-bottom:12px;font-size:14px;}
+.income-positive{color:#059669;font-weight:700;}
+.expense-negative{color:#dc2626;font-weight:700;}
+.divider{height:1px;background:rgba(0,0,0,0.07);margin:16px 0;}
+body.dark .divider{background:rgba(255,255,255,0.07);}
+.dark-toggle{margin-top:auto;padding-top:20px;}
+.saving-indicator{
+  position:fixed;bottom:20px;right:20px;background:#8B5CF6;color:white;
+  padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;
+  opacity:0;transition:0.3s;pointer-events:none;z-index:9999;
+}
+.saving-indicator.show{opacity:1;}
+@media(max-width:900px){
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;padding:16px;gap:6px;}
+  .content{margin-left:0;padding:16px;}
+  .app{flex-direction:column;}
+  .menu-btn{min-width:120px;font-size:13px;}
+  h1{font-size:28px;}
+  .grid-2{grid-template-columns:1fr;}
+  .logo{margin-bottom:0;font-size:22px;}
+  .dark-toggle{margin-top:0;padding-top:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- SAVING INDICATOR -->
+<div class="saving-indicator" id="savingIndicator">☁️ Saving...</div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">VELORA™</div>
+    <div class="auth-sub">Your personal wealth tracker</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-success" id="authSuccess"></div>
+    <input type="email" id="authEmail" placeholder="Email">
+    <input type="password" id="authPassword" placeholder="Password">
+    <button class="btn" style="width:100%" id="authBtn" onclick="handleAuth()">Login</button>
+    <div style="text-align:center;margin-top:16px">
+      <button onclick="handleForgotPassword()" style="background:none;border:none;color:var(--purple);cursor:pointer;font-size:13px">Forgot password?</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="app" style="display:none">
+<aside class="sidebar">
+  <div class="logo">VELORA™</div>
+  <div class="user-info" id="userEmail">-</div>
+  <button class="menu-btn" onclick="openPage('dashboardPage',this)">🏠 <span data-t="dashboard">Dashboard</span></button>
+  <button class="menu-btn" onclick="openPage('incomePage',this)">💰 <span data-t="income">Income</span></button>
+  <button class="menu-btn" onclick="openPage('budgetPage',this)">💸 <span data-t="budget">Budget</span></button>
+  <button class="menu-btn" onclick="openPage('expensePage',this)">🧾 <span data-t="expenses">Expenses</span></button>
+  <button class="menu-btn" onclick="openPage('goalPage',this)">🎯 <span data-t="goals">Goals</span></button>
+  <button class="menu-btn" onclick="openPage('subscriptionPage',this)">🔁 <span data-t="subscription">Subscription</span></button>
+  <button class="menu-btn" onclick="openPage('analyticsPage',this)">📊 <span data-t="analytics">Analytics</span></button>
+  <button class="menu-btn" onclick="openPage('reflectionPage',this)">🧠 <span data-t="reflection">Reflection</span></button>
+  <button class="menu-btn" onclick="openPage('settingsPage',this)">⚙️ <span data-t="settings">Settings</span></button>
+  <div class="dark-toggle">
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="toggleDark()">🌙 Dark Mode</button>
+    <button class="btn btn-danger" style="width:100%" onclick="handleLogout()">🚪 Logout</button>
+  </div>
+</aside>
+
+<main class="content">
+
+  <!-- DASHBOARD -->
+  <section id="dashboardPage" class="page active">
+    <h1>VELORA Dashboard</h1>
+    <div class="month-filter">
+      <label style="margin:0;white-space:nowrap">📅 <span data-t="viewingMonth">Viewing Month:</span></label>
+      <input type="month" id="dashMonth" onchange="renderAll()">
+    </div>
+    <div class="grid">
+      <div class="glass"><div class="stat-label" data-t="totalIncome">Total Income</div><div class="stat-value income-positive" id="heroIncome">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="totalExpenses">Total Expenses</div><div class="stat-value expense-negative" id="heroExpenses">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="balance">Balance</div><div class="stat-value" id="heroBalance">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="savings">Savings</div><div class="stat-value" id="heroSavings">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="subscriptions">Subscriptions / mo</div><div class="stat-value" id="subTotal">$0</div></div>
+    </div>
+    <div class="glass" id="dashInsight"></div>
+  </section>
+
+  <!-- INCOME -->
+  <section id="incomePage" class="page">
+    <h1 data-t="incomeTracker">Income Tracker</h1>
+    <div class="grid-2">
+      <div class="glass">
+        <label data-t="date">Date</label>
+        <input type="date" id="incomeDate">
+        <label data-t="source">Source / Category</label>
+        <select id="incomeCategory">
+          <option>💼 Salary</option><option>🔧 Freelance</option>
+          <option>📦 Business</option><option>📈 Investment</option>
+          <option>🎁 Gift / Other</option>
+        </select>
+        <input type="text" id="incomeCustomCat" placeholder="Custom source (optional)">
+        <label data-t="amount">Amount</label>
+        <input type="number" id="incomeAmount" placeholder="0">
+        <button class="btn" onclick="addIncome()" data-t="addIncome">+ Add Income</button>
+      </div>
+      <div class="glass">
+        <h3 data-t="incomeHistory">Income History</h3>
+        <div class="month-filter"><input type="month" id="incomeMonth" onchange="renderIncome()"></div>
+        <table><thead><tr>
+          <th data-t="date">Date</th><th data-t="source">Source</th><th data-t="amount">Amount</th><th></th>
+        </tr></thead><tbody id="incomeList"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUDGET -->
+  <section id="budgetPage" class="page">
+    <h1 data-t="budget">Budget Planner</h1>
+    <div class="month-filter">
+      <label style="margin:0" data-t="month">Month:</label>
+      <input type="month" id="budgetMonth" onchange="renderBudget()">
+    </div>
+    <div class="grid">
+      <div class="glass"><div class="stat-label" data-t="monthlyIncome">Monthly Income</div><div class="stat-value income-positive" id="budgetIncome">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="monthlyExpenses">Monthly Expenses</div><div class="stat-value expense-negative" id="budgetExpenses">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="remaining">Remaining</div><div class="stat-value" id="budgetRemaining">$0</div></div>
+      <div class="glass"><div class="stat-label" data-t="savingsRate">Savings Rate</div><div class="stat-value" id="budgetSavingsRate">0%</div></div>
+    </div>
+    <div class="glass">
+      <h3 data-t="setBudgetLimit">Set Budget Limits per Category</h3>
+      <div id="budgetLimitList"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <input type="text" id="limitCategory" placeholder="Category name" style="flex:1;margin-bottom:0;">
+        <input type="number" id="limitAmount" placeholder="Limit amount" style="flex:1;margin-bottom:0;">
+        <button class="btn btn-sm" onclick="addBudgetLimit()" data-t="addLimit">+ Add Limit</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPENSES -->
+  <section id="expensePage" class="page">
+    <h1 data-t="expenseTracker">Expense Tracker</h1>
+    <div class="grid-2">
+      <div class="glass">
+        <label data-t="date">Date</label>
+        <input type="date" id="expenseDate">
+        <label data-t="category">Category</label>
+        <select id="expenseCategory">
+          <option>🍜 Food</option><option>🚗 Transport</option>
+          <option>🛍 Shopping</option><option>🎮 Entertainment</option>
+          <option>💡 Bills</option><option>🏠 Rent</option>
+          <option>💊 Health</option><option>📚 Education</option>
+        </select>
+        <input type="text" id="customCategory" placeholder="Custom category (optional)">
+        <label data-t="amount">Amount</label>
+        <input type="number" id="expenseAmount" placeholder="0">
+        <input type="text" id="expenseNote" placeholder="Note (optional)">
+        <button class="btn" onclick="addExpense()" data-t="addExpense">+ Add Expense</button>
+      </div>
+      <div class="glass">
+        <h3 data-t="expenseHistory">Expense History</h3>
+        <div class="month-filter"><input type="month" id="expenseMonth" onchange="renderExpenses()"></div>
+        <table><thead><tr>
+          <th data-t="date">Date</th><th data-t="category">Category</th><th data-t="amount">Amount</th><th></th>
+        </tr></thead><tbody id="expenseList"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- GOALS -->
+  <section id="goalPage" class="page">
+    <h1 data-t="savingGoals">Savings Goals</h1>
+    <div class="glass">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="goalName" placeholder="Goal name" style="flex:1;margin-bottom:0;">
+        <input type="number" id="goalTarget" placeholder="Target amount" style="flex:1;margin-bottom:0;">
+        <button class="btn btn-sm" onclick="addGoal()" data-t="addGoal">+ Add Goal</button>
+      </div>
+    </div>
+    <div class="grid" id="goalGrid"></div>
+  </section>
+
+  <!-- SUBSCRIPTIONS -->
+  <section id="subscriptionPage" class="page">
+    <h1 data-t="subscriptions">Subscriptions</h1>
+    <div class="glass">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="subName" placeholder="Netflix" style="flex:1;margin-bottom:0;">
+        <input type="number" id="subCost" placeholder="Monthly cost" style="flex:1;margin-bottom:0;">
+        <button class="btn btn-sm" onclick="addSub()" data-t="addSubscription">+ Add</button>
+      </div>
+    </div>
+    <div class="grid" id="subGrid"></div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="analyticsPage" class="page">
+    <h1 data-t="analytics">Analytics</h1>
+    <div class="month-filter"><input type="month" id="analyticsMonth" onchange="renderAnalytics()"></div>
+    <div class="grid-2">
+      <div class="glass"><canvas id="chartExpense"></canvas></div>
+      <div class="glass"><canvas id="chartIncome"></canvas></div>
+    </div>
+    <div class="glass"><canvas id="chartMonthly"></canvas></div>
+    <div class="glass" id="monthlyReport"></div>
+  </section>
+
+  <!-- REFLECTION -->
+  <section id="reflectionPage" class="page">
+    <h1 data-t="reflection">Reflection Journal</h1>
+    <div class="grid-2">
+      <div class="glass">
+        <label data-t="date">Date</label>
+        <input type="date" id="reflectionDate">
+        <label data-t="writeReflection">Write your reflection</label>
+        <textarea id="reflectionInput" rows="8" placeholder="How was your financial discipline this month?"></textarea>
+        <button class="btn" onclick="saveReflection()" data-t="save">Save Reflection</button>
+      </div>
+      <div class="glass">
+        <h3 data-t="history">History</h3>
+        <div id="reflectionHistory"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settingsPage" class="page">
+    <h1 data-t="settings">Settings</h1>
+    <div class="glass">
+      <label data-t="currency">Currency</label>
+      <select id="currencySwitcher">
+        <option value="USD">🇺🇸 USD</option><option value="IDR">🇮🇩 IDR</option>
+        <option value="JPY">🇯🇵 JPY</option><option value="KRW">🇰🇷 KRW</option>
+        <option value="EUR">🇪🇺 EUR</option><option value="SAR">🇸🇦 SAR</option>
+        <option value="BRL">🇧🇷 BRL</option><option value="TRY">🇹🇷 TRY</option>
+        <option value="RUB">🇷🇺 RUB</option><option value="CNY">🇨🇳 CNY</option>
+        <option value="INR">🇮🇳 INR</option><option value="THB">🇹🇭 THB</option>
+      </select>
+      <div class="divider"></div>
+      <label data-t="language">Language</label>
+      <select id="languageSwitcher">
+        <option value="en">English</option><option value="id">Indonesia</option>
+        <option value="jp">日本語</option><option value="kr">한국어</option>
+        <option value="fr">Français</option><option value="ar">العربية</option>
+        <option value="pt">Português</option><option value="tr">Türkçe</option>
+        <option value="ru">Русский</option><option value="zh">中文</option>
+        <option value="hi">हिन्दी</option><option value="th">ไทย</option>
+      </select>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// =========================================================
+// SUPABASE CONFIG — GANTI DENGAN MILIKMU
+// =========================================================
+const SUPABASE_URL = "https://tquafftowpogvrgmzskq.supabase.co;"
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxdWFmZnRvd3BvZ3ZyZ216c2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTU5NzksImV4cCI6MjA5NTM5MTk3OX0.LuD_6qxwnYmkGy18CUn8z6Vuto0bw3HBkhVvPtS8eCY;"
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// =========================================================
+// TRANSLATIONS
+// =========================================================
+const translations = {
+  en:{dashboard:"Dashboard",income:"Income",budget:"Budget",expenses:"Expenses",goals:"Goals",subscription:"Subscription",analytics:"Analytics",reflection:"Reflection",settings:"Settings",incomeTracker:"Income Tracker",expenseTracker:"Expense Tracker",savingGoals:"Savings Goals",subscriptions:"Subscriptions",totalIncome:"Total Income",totalExpenses:"Total Expenses",balance:"Balance",savings:"Savings",remaining:"Remaining",savingsRate:"Savings Rate",monthlyIncome:"Monthly Income",monthlyExpenses:"Monthly Expenses",date:"Date",source:"Source",category:"Category",amount:"Amount",month:"Month",addIncome:"+ Add Income",addExpense:"+ Add Expense",addGoal:"+ Add Goal",addSubscription:"+ Add",addLimit:"+ Add Limit",setBudgetLimit:"Budget Limits per Category",incomeHistory:"Income History",expenseHistory:"Expense History",history:"History",writeReflection:"Write your reflection",viewingMonth:"Viewing Month:",save:"Save",edit:"Edit",delete:"Delete"},
+  id:{dashboard:"Dasbor",income:"Pemasukan",budget:"Anggaran",expenses:"Pengeluaran",goals:"Target",subscription:"Langganan",analytics:"Analitik",reflection:"Refleksi",settings:"Pengaturan",incomeTracker:"Pelacak Pemasukan",expenseTracker:"Pelacak Pengeluaran",savingGoals:"Target Tabungan",subscriptions:"Langganan",totalIncome:"Total Pemasukan",totalExpenses:"Total Pengeluaran",balance:"Saldo",savings:"Tabungan",remaining:"Sisa",savingsRate:"Rasio Tabungan",monthlyIncome:"Pemasukan Bulanan",monthlyExpenses:"Pengeluaran Bulanan",date:"Tanggal",source:"Sumber",category:"Kategori",amount:"Jumlah",month:"Bulan",addIncome:"+ Tambah Pemasukan",addExpense:"+ Tambah Pengeluaran",addGoal:"+ Tambah Target",addSubscription:"+ Tambah",addLimit:"+ Tambah Batas",setBudgetLimit:"Batas Anggaran per Kategori",incomeHistory:"Riwayat Pemasukan",expenseHistory:"Riwayat Pengeluaran",history:"Riwayat",writeReflection:"Tulis refleksimu",viewingMonth:"Bulan yang dilihat:",save:"Simpan",edit:"Ubah",delete:"Hapus"},
+  jp:{dashboard:"ダッシュボード",income:"収入",budget:"予算",expenses:"支出",goals:"目標",subscription:"サブスク",analytics:"分析",reflection:"振り返り",settings:"設定",incomeTracker:"収入トラッカー",expenseTracker:"支出トラッカー",savingGoals:"貯蓄目標",subscriptions:"サブスクリプション",totalIncome:"総収入",totalExpenses:"総支出",balance:"残高",savings:"貯蓄",remaining:"残り",savingsRate:"貯蓄率",monthlyIncome:"月収",monthlyExpenses:"月間支出",date:"日付",source:"ソース",category:"カテゴリ",amount:"金額",month:"月",addIncome:"収入追加",addExpense:"支出追加",addGoal:"目標追加",addSubscription:"追加",addLimit:"制限追加",setBudgetLimit:"カテゴリ別予算制限",incomeHistory:"収入履歴",expenseHistory:"支出履歴",history:"履歴",writeReflection:"振り返りを書く",viewingMonth:"表示月：",save:"保存",edit:"編集",delete:"削除"},
+  kr:{dashboard:"대시보드",income:"수입",budget:"예산",expenses:"지출",goals:"목표",subscription:"구독",analytics:"분석",reflection:"회고",settings:"설정",incomeTracker:"수입 추적기",expenseTracker:"지출 추적기",savingGoals:"저축 목표",subscriptions:"구독",totalIncome:"총 수입",totalExpenses:"총 지출",balance:"잔액",savings:"저축",remaining:"잔액",savingsRate:"저축률",monthlyIncome:"월 수입",monthlyExpenses:"월 지출",date:"날짜",source:"소스",category:"카테고리",amount:"금액",month:"월",addIncome:"수입 추가",addExpense:"지출 추가",addGoal:"목표 추가",addSubscription:"추가",addLimit:"한도 추가",setBudgetLimit:"카테고리별 예산 한도",incomeHistory:"수입 내역",expenseHistory:"지출 내역",history:"내역",writeReflection:"회고 작성",viewingMonth:"조회 월:",save:"저장",edit:"수정",delete:"삭제"},
+  fr:{dashboard:"Tableau de bord",income:"Revenus",budget:"Budget",expenses:"Dépenses",goals:"Objectifs",subscription:"Abonnement",analytics:"Analytique",reflection:"Réflexion",settings:"Paramètres",incomeTracker:"Suivi des revenus",expenseTracker:"Suivi des dépenses",savingGoals:"Objectifs d'épargne",subscriptions:"Abonnements",totalIncome:"Revenus totaux",totalExpenses:"Dépenses totales",balance:"Solde",savings:"Épargne",remaining:"Restant",savingsRate:"Taux d'épargne",monthlyIncome:"Revenus mensuels",monthlyExpenses:"Dépenses mensuelles",date:"Date",source:"Source",category:"Catégorie",amount:"Montant",month:"Mois",addIncome:"+ Ajouter revenu",addExpense:"+ Ajouter dépense",addGoal:"+ Ajouter objectif",addSubscription:"+ Ajouter",addLimit:"+ Ajouter limite",setBudgetLimit:"Limites par catégorie",incomeHistory:"Historique revenus",expenseHistory:"Historique dépenses",history:"Historique",writeReflection:"Écrivez votre réflexion",viewingMonth:"Mois affiché :",save:"Enregistrer",edit:"Modifier",delete:"Supprimer"},
+  ar:{dashboard:"لوحة التحكم",income:"الدخل",budget:"الميزانية",expenses:"المصروفات",goals:"الأهداف",subscription:"الاشتراك",analytics:"التحليلات",reflection:"التفكير",settings:"الإعدادات",incomeTracker:"متتبع الدخل",expenseTracker:"متتبع المصروفات",savingGoals:"أهداف الادخار",subscriptions:"الاشتراكات",totalIncome:"إجمالي الدخل",totalExpenses:"إجمالي المصروفات",balance:"الرصيد",savings:"المدخرات",remaining:"المتبقي",savingsRate:"معدل الادخار",monthlyIncome:"الدخل الشهري",monthlyExpenses:"المصروفات الشهرية",date:"التاريخ",source:"المصدر",category:"الفئة",amount:"المبلغ",month:"الشهر",addIncome:"+ إضافة دخل",addExpense:"+ إضافة مصروف",addGoal:"+ إضافة هدف",addSubscription:"+ إضافة",addLimit:"+ إضافة حد",setBudgetLimit:"حدود الميزانية",incomeHistory:"سجل الدخل",expenseHistory:"سجل المصروفات",history:"السجل",writeReflection:"اكتب تأملاتك",viewingMonth:"الشهر المعروض:",save:"حفظ",edit:"تعديل",delete:"حذف"},
+  pt:{dashboard:"Painel",income:"Renda",budget:"Orçamento",expenses:"Despesas",goals:"Metas",subscription:"Assinatura",analytics:"Análises",reflection:"Reflexão",settings:"Configurações",incomeTracker:"Rastreador de renda",expenseTracker:"Rastreador de despesas",savingGoals:"Metas de economia",subscriptions:"Assinaturas",totalIncome:"Renda total",totalExpenses:"Despesas totais",balance:"Saldo",savings:"Poupança",remaining:"Restante",savingsRate:"Taxa de poupança",monthlyIncome:"Renda mensal",monthlyExpenses:"Despesas mensais",date:"Data",source:"Fonte",category:"Categoria",amount:"Valor",month:"Mês",addIncome:"+ Adicionar renda",addExpense:"+ Adicionar despesa",addGoal:"+ Adicionar meta",addSubscription:"+ Adicionar",addLimit:"+ Adicionar limite",setBudgetLimit:"Limites por categoria",incomeHistory:"Histórico de renda",expenseHistory:"Histórico de despesas",history:"Histórico",writeReflection:"Escreva sua reflexão",viewingMonth:"Mês exibido:",save:"Salvar",edit:"Editar",delete:"Excluir"},
+  tr:{dashboard:"Gösterge Paneli",income:"Gelir",budget:"Bütçe",expenses:"Giderler",goals:"Hedefler",subscription:"Abonelik",analytics:"Analitik",reflection:"Yansıma",settings:"Ayarlar",incomeTracker:"Gelir Takibi",expenseTracker:"Gider Takibi",savingGoals:"Tasarruf Hedefleri",subscriptions:"Abonelikler",totalIncome:"Toplam Gelir",totalExpenses:"Toplam Gider",balance:"Bakiye",savings:"Tasarruf",remaining:"Kalan",savingsRate:"Tasarruf Oranı",monthlyIncome:"Aylık Gelir",monthlyExpenses:"Aylık Gider",date:"Tarih",source:"Kaynak",category:"Kategori",amount:"Tutar",month:"Ay",addIncome:"+ Gelir Ekle",addExpense:"+ Gider Ekle",addGoal:"+ Hedef Ekle",addSubscription:"+ Ekle",addLimit:"+ Limit Ekle",setBudgetLimit:"Kategori Bütçe Limitleri",incomeHistory:"Gelir Geçmişi",expenseHistory:"Gider Geçmişi",history:"Geçmiş",writeReflection:"Yansımanı yaz",viewingMonth:"Görüntülenen Ay:",save:"Kaydet",edit:"Düzenle",delete:"Sil"},
+  ru:{dashboard:"Панель",income:"Доход",budget:"Бюджет",expenses:"Расходы",goals:"Цели",subscription:"Подписка",analytics:"Аналитика",reflection:"Размышления",settings:"Настройки",incomeTracker:"Трекер доходов",expenseTracker:"Трекер расходов",savingGoals:"Цели накоплений",subscriptions:"Подписки",totalIncome:"Общий доход",totalExpenses:"Общие расходы",balance:"Баланс",savings:"Сбережения",remaining:"Остаток",savingsRate:"Норма сбережений",monthlyIncome:"Ежемесячный доход",monthlyExpenses:"Ежемесячные расходы",date:"Дата",source:"Источник",category:"Категория",amount:"Сумма",month:"Месяц",addIncome:"+ Добавить доход",addExpense:"+ Добавить расход",addGoal:"+ Добавить цель",addSubscription:"+ Добавить",addLimit:"+ Добавить лимит",setBudgetLimit:"Лимиты по категориям",incomeHistory:"История доходов",expenseHistory:"История расходов",history:"История",writeReflection:"Напишите размышление",viewingMonth:"Отображаемый месяц:",save:"Сохранить",edit:"Редактировать",delete:"Удалить"},
+  zh:{dashboard:"仪表板",income:"收入",budget:"预算",expenses:"支出",goals:"目标",subscription:"订阅",analytics:"分析",reflection:"反思",settings:"设置",incomeTracker:"收入追踪",expenseTracker:"支出追踪",savingGoals:"储蓄目标",subscriptions:"订阅",totalIncome:"总收入",totalExpenses:"总支出",balance:"余额",savings:"储蓄",remaining:"剩余",savingsRate:"储蓄率",monthlyIncome:"月收入",monthlyExpenses:"月支出",date:"日期",source:"来源",category:"类别",amount:"金额",month:"月份",addIncome:"+ 添加收入",addExpense:"+ 添加支出",addGoal:"+ 添加目标",addSubscription:"+ 添加",addLimit:"+ 添加限额",setBudgetLimit:"各类别预算限额",incomeHistory:"收入历史",expenseHistory:"支出历史",history:"历史",writeReflection:"写下你的反思",viewingMonth:"查看月份：",save:"保存",edit:"编辑",delete:"删除"},
+  hi:{dashboard:"डैशबोर्ड",income:"आय",budget:"बजट",expenses:"खर्च",goals:"लक्ष्य",subscription:"सदस्यता",analytics:"विश्लेषण",reflection:"चिंतन",settings:"सेटिंग्स",incomeTracker:"आय ट्रैकर",expenseTracker:"खर्च ट्रैकर",savingGoals:"बचत लक्ष्य",subscriptions:"सदस्यताएँ",totalIncome:"कुल आय",totalExpenses:"कुल खर्च",balance:"शेष",savings:"बचत",remaining:"बाकी",savingsRate:"बचत दर",monthlyIncome:"मासिक आय",monthlyExpenses:"मासिक खर्च",date:"तारीख",source:"स्रोत",category:"श्रेणी",amount:"राशि",month:"महीना",addIncome:"+ आय जोड़ें",addExpense:"+ खर्च जोड़ें",addGoal:"+ लक्ष्य जोड़ें",addSubscription:"+ जोड़ें",addLimit:"+ सीमा जोड़ें",setBudgetLimit:"श्रेणी बजट सीमाएं",incomeHistory:"आय इतिहास",expenseHistory:"खर्च इतिहास",history:"इतिहास",writeReflection:"अपना चिंतन लिखें",viewingMonth:"देख रहे महीना:",save:"सहेजें",edit:"संपादित करें",delete:"हटाएं"},
+  th:{dashboard:"แดชบอร์ด",income:"รายได้",budget:"งบประมาณ",expenses:"รายจ่าย",goals:"เป้าหมาย",subscription:"การสมัครสมาชิก",analytics:"การวิเคราะห์",reflection:"การสะท้อน",settings:"การตั้งค่า",incomeTracker:"ติดตามรายได้",expenseTracker:"ติดตามรายจ่าย",savingGoals:"เป้าหมายการออม",subscriptions:"การสมัครสมาชิก",totalIncome:"รายได้รวม",totalExpenses:"รายจ่ายรวม",balance:"ยอดคงเหลือ",savings:"เงินออม",remaining:"คงเหลือ",savingsRate:"อัตราการออม",monthlyIncome:"รายได้รายเดือน",monthlyExpenses:"รายจ่ายรายเดือน",date:"วันที่",source:"แหล่งที่มา",category:"หมวดหมู่",amount:"จำนวน",month:"เดือน",addIncome:"+ เพิ่มรายได้",addExpense:"+ เพิ่มรายจ่าย",addGoal:"+ เพิ่มเป้าหมาย",addSubscription:"+ เพิ่ม",addLimit:"+ เพิ่มขีดจำกัด",setBudgetLimit:"ขีดจำกัดงบประมาณ",incomeHistory:"ประวัติรายได้",expenseHistory:"ประวัติรายจ่าย",history:"ประวัติ",writeReflection:"เขียนการสะท้อนของคุณ",viewingMonth:"ดูเดือน:",save:"บันทึก",edit:"แก้ไข",delete:"ลบ"}
+};
+
+// =========================================================
+// STATE
+// =========================================================
+let currentCurrency = localStorage.getItem("velora_currency") || "USD";
+let currentLanguage = localStorage.getItem("velora_language") || "en";
+let currentUser = null;
+let saveTimeout = null;
+
+const RATES = {USD:1,IDR:15500,JPY:150,KRW:1330,EUR:0.92,SAR:3.75,BRL:5.1,TRY:32,RUB:92,CNY:7.2,INR:83,THB:36};
+
+let incomeData    = [];
+let expensesData  = [];
+let goals         = [];
+let subscriptions = [];
+let reflections   = [];
+let budgetLimits  = [];
+
+let chartExpenseInst, chartIncomeInst, chartMonthlyInst;
+
+// =========================================================
+// UTILS
+// =========================================================
+function toDisplay(usd){ return usd * RATES[currentCurrency]; }
+function toUSD(display){ return display / RATES[currentCurrency]; }
+function fmt(usd){
+  return new Intl.NumberFormat(undefined,{style:"currency",currency:currentCurrency}).format(toDisplay(usd));
+}
+function currentMonth(){
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+}
+function getMonth(id){ return document.getElementById(id).value || currentMonth(); }
+function filterByMonth(arr,m){ return arr.filter(i => i.date && i.date.startsWith(m)); }
+function sumBy(arr,key){ return arr.reduce((s,i)=>s+(i[key]||0),0); }
+
+// =========================================================
+// SAVING INDICATOR
+// =========================================================
+function showSaving(){
+  const el = document.getElementById("savingIndicator");
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"), 2000);
+}
+
+// =========================================================
+// AUTH
+// =========================================================
+let authMode = "login";
+
+function switchTab(mode){
+  authMode = mode;
+  document.querySelectorAll(".auth-tab").forEach((t,i)=>{
+    t.classList.toggle("active", (i===0&&mode==="login")||(i===1&&mode==="register"));
+  });
+  document.getElementById("authBtn").textContent = mode==="login" ? "Login" : "Create Account";
+  document.getElementById("authError").style.display = "none";
+  document.getElementById("authSuccess").style.display = "none";
+}
+
+function showAuthError(msg){
+  const el = document.getElementById("authError");
+  el.textContent = msg; el.style.display = "block";
+}
+function showAuthSuccess(msg){
+  const el = document.getElementById("authSuccess");
+  el.textContent = msg; el.style.display = "block";
+}
+
+async function handleAuth(){
+  const email    = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  document.getElementById("authError").style.display = "none";
+  document.getElementById("authSuccess").style.display = "none";
+
+  if(!email || !password){ showAuthError("Please fill in all fields."); return; }
+
+  const btn = document.getElementById("authBtn");
+  btn.textContent = "Please wait..."; btn.disabled = true;
+
+  if(authMode === "login"){
+    const {data, error} = await sb.auth.signInWithPassword({email, password});
+    if(error){ showAuthError(error.message); btn.textContent="Login"; btn.disabled=false; return; }
+    await onLogin(data.user);
+  } else {
+    const {data, error} = await sb.auth.signUp({email, password});
+    if(error){ showAuthError(error.message); btn.textContent="Create Account"; btn.disabled=false; return; }
+    showAuthSuccess("Account created! You can now login.");
+    switchTab("login");
+  }
+  btn.disabled = false;
+}
+
+async function handleForgotPassword(){
+  const email = document.getElementById("authEmail").value.trim();
+  if(!email){ showAuthError("Enter your email first."); return; }
+  const {error} = await sb.auth.resetPasswordForEmail(email);
+  if(error) showAuthError(error.message);
+  else showAuthSuccess("Password reset email sent!");
+}
+
+async function handleLogout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  incomeData=[]; expensesData=[]; goals=[]; subscriptions=[]; reflections=[]; budgetLimits=[];
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("authEmail").value = "";
+  document.getElementById("authPassword").value = "";
+  switchTab("login");
+}
+
+async function onLogin(user){
+  currentUser = user;
+  document.getElementById("userEmail").textContent = user.email;
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "flex";
+  await loadData();
+  const m = currentMonth();
+  ["dashMonth","incomeMonth","expenseMonth","budgetMonth","analyticsMonth"].forEach(id=>{
+    document.getElementById(id).value = m;
+  });
+  applyLanguage();
+  renderAll();
+}
+
+// =========================================================
+// DATABASE — LOAD & SAVE
+// =========================================================
+async function loadData(){
+  const {data, error} = await sb
+    .from("user_data")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  if(error || !data){
+    // First time user — buat row kosong
+    await sb.from("user_data").insert({user_id: currentUser.id});
+    return;
+  }
+
+  incomeData    = data.income_data        || [];
+  expensesData  = data.expenses_data      || [];
+  goals         = data.goals_data         || [];
+  subscriptions = data.subscriptions_data || [];
+  reflections   = data.reflections_data   || [];
+  budgetLimits  = data.budget_limits_data || [];
+}
+
+async function saveData(){
+  showSaving();
+  await sb.from("user_data").upsert({
+    user_id:              currentUser.id,
+    income_data:          incomeData,
+    expenses_data:        expensesData,
+    goals_data:           goals,
+    subscriptions_data:   subscriptions,
+    reflections_data:     reflections,
+    budget_limits_data:   budgetLimits,
+    updated_at:           new Date().toISOString()
+  }, {onConflict: "user_id"});
+}
+
+// Debounce save — tidak save setiap keystroke
+function scheduleSave(){
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveData, 1000);
+}
+
+// =========================================================
+// NAVIGATION
+// =========================================================
+function openPage(pageId, btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(pageId).classList.add("active");
+  document.querySelectorAll(".menu-btn").forEach(b=>b.classList.remove("active-nav"));
+  if(btn) btn.classList.add("active-nav");
+  renderAll();
+}
+
+// =========================================================
+// DARK MODE
+// =========================================================
+function toggleDark(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("velora_dark", document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("velora_dark")==="true") document.body.classList.add("dark");
+
+// =========================================================
+// LANGUAGE
+// =========================================================
+function applyLanguage(){
+  const T = translations[currentLanguage] || translations.en;
+  document.querySelectorAll("[data-t]").forEach(el=>{
+    const k = el.getAttribute("data-t");
+    if(T[k]) el.textContent = T[k];
+  });
+  document.body.style.direction = currentLanguage==="ar" ? "rtl" : "ltr";
+}
+
+document.getElementById("languageSwitcher").value = currentLanguage;
+document.getElementById("languageSwitcher").addEventListener("change", e=>{
+  currentLanguage = e.target.value;
+  localStorage.setItem("velora_language", currentLanguage);
+  applyLanguage();
+});
+
+// =========================================================
+// CURRENCY
+// =========================================================
+document.getElementById("currencySwitcher").value = currentCurrency;
+document.getElementById("currencySwitcher").addEventListener("change", e=>{
+  currentCurrency = e.target.value;
+  localStorage.setItem("velora_currency", currentCurrency);
+  renderAll();
+});
+
+// =========================================================
+// INCOME
+// =========================================================
+function addIncome(){
+  const date   = document.getElementById("incomeDate").value;
+  const cat    = document.getElementById("incomeCustomCat").value || document.getElementById("incomeCategory").value;
+  const amount = toUSD(Number(document.getElementById("incomeAmount").value));
+  if(!date||!amount) return;
+  incomeData.push({date,category:cat,amount});
+  document.getElementById("incomeAmount").value="";
+  document.getElementById("incomeCustomCat").value="";
+  scheduleSave(); renderAll();
+}
+
+function renderIncome(){
+  const month    = getMonth("incomeMonth");
+  const filtered = filterByMonth(incomeData, month);
+  const list     = document.getElementById("incomeList");
+  list.innerHTML = "";
+  filtered.forEach(item=>{
+    const ri = incomeData.indexOf(item);
+    list.innerHTML += `<tr>
+      <td>${item.date}</td>
+      <td><span class="badge badge-green">${item.category}</span></td>
+      <td class="income-positive">${fmt(item.amount)}</td>
+      <td><button class="action-btn delete-btn" onclick="deleteIncome(${ri})">✕</button></td>
+    </tr>`;
+  });
+}
+
+function deleteIncome(i){ incomeData.splice(i,1); scheduleSave(); renderAll(); }
+
+// =========================================================
+// EXPENSES
+// =========================================================
+function addExpense(){
+  const date     = document.getElementById("expenseDate").value;
+  const category = document.getElementById("customCategory").value || document.getElementById("expenseCategory").value;
+  const amount   = toUSD(Number(document.getElementById("expenseAmount").value));
+  const note     = document.getElementById("expenseNote").value;
+  if(!date||!amount) return;
+  expensesData.push({date,category,amount,note});
+  document.getElementById("expenseAmount").value="";
+  document.getElementById("expenseNote").value="";
+  document.getElementById("customCategory").value="";
+  scheduleSave(); renderAll();
+}
+
+function renderExpenses(){
+  const month    = getMonth("expenseMonth");
+  const filtered = filterByMonth(expensesData, month);
+  const list     = document.getElementById("expenseList");
+  list.innerHTML = "";
+  filtered.forEach(item=>{
+    const ri = expensesData.indexOf(item);
+    list.innerHTML += `<tr>
+      <td>${item.date}</td>
+      <td><span class="badge badge-purple">${item.category}</span>${item.note?`<br><small style="color:var(--sub)">${item.note}</small>`:""}</td>
+      <td class="expense-negative">${fmt(item.amount)}</td>
+      <td>
+        <button class="action-btn edit-btn" onclick="editExpense(${ri})">✎</button>
+        <button class="action-btn delete-btn" onclick="deleteExpense(${ri})">✕</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function editExpense(i){
+  const val = prompt("Edit amount ("+currentCurrency+")", toDisplay(expensesData[i].amount).toFixed(2));
+  if(val!==null){ expensesData[i].amount=toUSD(Number(val)); scheduleSave(); renderAll(); }
+}
+function deleteExpense(i){ expensesData.splice(i,1); scheduleSave(); renderAll(); }
+
+// =========================================================
+// BUDGET
+// =========================================================
+function addBudgetLimit(){
+  const cat    = document.getElementById("limitCategory").value.trim();
+  const amount = toUSD(Number(document.getElementById("limitAmount").value));
+  if(!cat||!amount) return;
+  const ex = budgetLimits.findIndex(l=>l.category.toLowerCase()===cat.toLowerCase());
+  if(ex>=0) budgetLimits[ex].limit=amount;
+  else budgetLimits.push({category:cat,limit:amount});
+  document.getElementById("limitCategory").value="";
+  document.getElementById("limitAmount").value="";
+  scheduleSave(); renderBudget();
+}
+
+function renderBudget(){
+  const month       = getMonth("budgetMonth");
+  const monthIncome = sumBy(filterByMonth(incomeData,month),"amount");
+  const monthExp    = sumBy(filterByMonth(expensesData,month),"amount");
+  const remaining   = monthIncome - monthExp;
+  const rate        = monthIncome>0?((remaining/monthIncome)*100).toFixed(1):0;
+
+  document.getElementById("budgetIncome").textContent    = fmt(monthIncome);
+  document.getElementById("budgetExpenses").textContent  = fmt(monthExp);
+  document.getElementById("budgetRemaining").textContent = fmt(remaining);
+  document.getElementById("budgetSavingsRate").textContent = rate+"%";
+  document.getElementById("budgetRemaining").className =
+    "stat-value "+(remaining>=0?"income-positive":"expense-negative");
+
+  const ll = document.getElementById("budgetLimitList");
+  ll.innerHTML = "";
+  if(!budgetLimits.length){ ll.innerHTML=`<p style="margin-bottom:12px">No limits set yet.</p>`; return; }
+  budgetLimits.forEach((lim,i)=>{
+    const spent = sumBy(filterByMonth(expensesData,month).filter(e=>e.category.toLowerCase().includes(lim.category.toLowerCase())),"amount");
+    const pct   = lim.limit>0?Math.min((spent/lim.limit)*100,100):0;
+    const over  = spent>lim.limit;
+    ll.innerHTML += `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:600">${lim.category}</span>
+          <span>
+            <span class="${over?"expense-negative":"income-positive"}">${fmt(spent)}</span>
+            <span style="color:var(--sub)"> / ${fmt(lim.limit)}</span>
+            <button class="action-btn delete-btn" style="margin-left:8px" onclick="deleteBudgetLimit(${i})">✕</button>
+          </span>
+        </div>
+        <div class="progress-bar"><div class="progress" style="width:${pct}%;background:${over?"#f87171":"linear-gradient(90deg,#8B5CF6,#34D399)"}"></div></div>
+        ${over?`<small class="expense-negative">⚠️ Over budget by ${fmt(spent-lim.limit)}</small>`:""}
+      </div>`;
+  });
+}
+
+function deleteBudgetLimit(i){ budgetLimits.splice(i,1); scheduleSave(); renderBudget(); }
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+function renderDashboard(){
+  const month     = getMonth("dashMonth");
+  const monthInc  = sumBy(filterByMonth(incomeData,month),"amount");
+  const monthExp  = sumBy(filterByMonth(expensesData,month),"amount");
+  const balance   = monthInc - monthExp;
+  const subTotal  = sumBy(subscriptions,"cost");
+  const savings   = Math.max(balance,0);
+
+  document.getElementById("heroIncome").textContent   = fmt(monthInc);
+  document.getElementById("heroExpenses").textContent = fmt(monthExp);
+  document.getElementById("heroBalance").textContent  = fmt(balance);
+  document.getElementById("heroSavings").textContent  = fmt(savings);
+  document.getElementById("subTotal").textContent     = fmt(subTotal);
+  document.getElementById("heroBalance").className =
+    "stat-value "+(balance>=0?"income-positive":"expense-negative");
+
+  const savingsRate  = monthInc>0?(savings/monthInc)*100:0;
+  const expenseRatio = monthInc>0?(monthExp/monthInc)*100:0;
+  let insight = "";
+
+  if(monthInc===0){
+    insight = `<div class="insight-card">📥 No income recorded for this month.</div>`;
+  } else {
+    if(expenseRatio>90)      insight+=`<div class="insight-card">🔴 Expenses are ${expenseRatio.toFixed(0)}% of income — critically high.</div>`;
+    else if(expenseRatio>70) insight+=`<div class="insight-card">⚠️ Expenses at ${expenseRatio.toFixed(0)}% of income — above recommended threshold.</div>`;
+    else                     insight+=`<div class="insight-card">✅ Expense ratio ${expenseRatio.toFixed(0)}% — healthy range.</div>`;
+
+    if(savingsRate<10)       insight+=`<div class="insight-card">💡 Savings rate ${savingsRate.toFixed(1)}% — aim for at least 20%.</div>`;
+    else if(savingsRate>=20) insight+=`<div class="insight-card">🌱 Savings rate ${savingsRate.toFixed(1)}% — solid discipline.</div>`;
+
+    if(subTotal>monthInc*0.1) insight+=`<div class="insight-card">🔁 Subscriptions ${fmt(subTotal)}/mo = ${((subTotal/monthInc)*100).toFixed(1)}% of income.</div>`;
+  }
+  document.getElementById("dashInsight").innerHTML=`<h3 style="margin-bottom:12px">📈 Monthly Insights</h3>${insight}`;
+}
+
+// =========================================================
+// GOALS
+// =========================================================
+function addGoal(){
+  const name   = document.getElementById("goalName").value.trim();
+  const target = toUSD(Number(document.getElementById("goalTarget").value));
+  if(!name||!target) return;
+  goals.push({name,target,saved:0});
+  document.getElementById("goalName").value="";
+  document.getElementById("goalTarget").value="";
+  scheduleSave(); renderGoals();
+}
+
+function renderGoals(){
+  const grid = document.getElementById("goalGrid");
+  grid.innerHTML="";
+  goals.forEach((goal,i)=>{
+    const pct = Math.min((goal.saved/goal.target)*100,100);
+    grid.innerHTML+=`
+      <div class="glass">
+        <h3>${goal.name}</h3>
+        <div class="progress-bar"><div class="progress" style="width:${pct}%"></div></div>
+        <p>${fmt(goal.saved)} / ${fmt(goal.target)} (${pct.toFixed(1)}%)</p>
+        <br>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="saveMoney(${i})">+ Save</button>
+          <button class="action-btn edit-btn" onclick="editGoal(${i})">✎</button>
+          <button class="action-btn delete-btn" onclick="deleteGoal(${i})">✕</button>
+        </div>
+      </div>`;
+  });
+}
+
+function saveMoney(i){
+  const val=prompt("Amount ("+currentCurrency+")");
+  if(val){ goals[i].saved+=toUSD(Number(val)); scheduleSave(); renderGoals(); }
+}
+function editGoal(i){
+  const name=prompt("Goal name",goals[i].name);
+  const target=prompt("Target ("+currentCurrency+")",toDisplay(goals[i].target).toFixed(2));
+  if(name) goals[i].name=name;
+  if(target) goals[i].target=toUSD(Number(target));
+  scheduleSave(); renderGoals();
+}
+function deleteGoal(i){ goals.splice(i,1); scheduleSave(); renderGoals(); }
+
+// =========================================================
+// SUBSCRIPTIONS
+// =========================================================
+function addSub(){
+  const name=document.getElementById("subName").value.trim();
+  const cost=toUSD(Number(document.getElementById("subCost").value));
+  if(!name||!cost) return;
+  subscriptions.push({name,cost});
+  document.getElementById("subName").value="";
+  document.getElementById("subCost").value="";
+  scheduleSave(); renderSubs();
+}
+
+function renderSubs(){
+  const grid=document.getElementById("subGrid");
+  grid.innerHTML=""; let total=0;
+  subscriptions.forEach((sub,i)=>{
+    total+=sub.cost;
+    grid.innerHTML+=`
+      <div class="glass">
+        <h3>${sub.name}</h3><br>
+        <p class="expense-negative" style="font-size:20px;font-weight:700">${fmt(sub.cost)}<span style="font-size:12px;font-weight:400">/mo</span></p><br>
+        <button class="action-btn delete-btn" onclick="deleteSub(${i})">✕ Remove</button>
+      </div>`;
+  });
+  document.getElementById("subTotal").textContent=fmt(total);
+}
+function deleteSub(i){ subscriptions.splice(i,1); scheduleSave(); renderSubs(); }
+
+// =========================================================
+// ANALYTICS
+// =========================================================
+function renderAnalytics(){
+  const month    = getMonth("analyticsMonth");
+  const monthExp = filterByMonth(expensesData,month);
+  const monthInc = filterByMonth(incomeData,month);
+
+  const expCats={};
+  monthExp.forEach(e=>{ expCats[e.category]=(expCats[e.category]||0)+e.amount; });
+  if(chartExpenseInst) chartExpenseInst.destroy();
+  chartExpenseInst=new Chart(document.getElementById("chartExpense"),{
+    type:"doughnut",
+    data:{labels:Object.keys(expCats),datasets:[{data:Object.values(expCats).map(v=>toDisplay(v)),
+      backgroundColor:["#8B5CF6","#60A5FA","#34D399","#F59E0B","#F87171","#A78BFA","#6EE7B7","#93C5FD"],borderWidth:0}]},
+    options:{plugins:{legend:{position:"bottom"},title:{display:true,text:"Expenses by Category"}}}
+  });
+
+  const incCats={};
+  monthInc.forEach(i=>{ incCats[i.category]=(incCats[i.category]||0)+i.amount; });
+  if(chartIncomeInst) chartIncomeInst.destroy();
+  chartIncomeInst=new Chart(document.getElementById("chartIncome"),{
+    type:"doughnut",
+    data:{labels:Object.keys(incCats),datasets:[{data:Object.values(incCats).map(v=>toDisplay(v)),
+      backgroundColor:["#34D399","#6EE7B7","#A7F3D0","#059669","#10B981"],borderWidth:0}]},
+    options:{plugins:{legend:{position:"bottom"},title:{display:true,text:"Income by Source"}}}
+  });
+
+  const months=[],incArr=[],expArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    months.push(m);
+    incArr.push(toDisplay(sumBy(filterByMonth(incomeData,m),"amount")));
+    expArr.push(toDisplay(sumBy(filterByMonth(expensesData,m),"amount")));
+  }
+  if(chartMonthlyInst) chartMonthlyInst.destroy();
+  chartMonthlyInst=new Chart(document.getElementById("chartMonthly"),{
+    type:"bar",
+    data:{labels:months,datasets:[
+      {label:"Income",data:incArr,backgroundColor:"#34D399"},
+      {label:"Expenses",data:expArr,backgroundColor:"#F87171"}
+    ]},
+    options:{plugins:{legend:{position:"bottom"},title:{display:true,text:"6-Month Overview"}},scales:{y:{beginAtZero:true}}}
+  });
+
+  const totalInc=sumBy(monthInc,"amount");
+  const totalExp=sumBy(monthExp,"amount");
+  const balance=totalInc-totalExp;
+  document.getElementById("monthlyReport").innerHTML=`
+    <h3 style="margin-bottom:12px">📋 ${month} Summary</h3>
+    <p>Income: <strong class="income-positive">${fmt(totalInc)}</strong></p>
+    <p>Expenses: <strong class="expense-negative">${fmt(totalExp)}</strong></p>
+    <p>Balance: <strong class="${balance>=0?"income-positive":"expense-negative"}">${fmt(balance)}</strong></p>
+    <p>Savings Rate: <strong>${totalInc>0?((Math.max(balance,0)/totalInc)*100).toFixed(1):0}%</strong></p>`;
+}
+
+// =========================================================
+// REFLECTION
+// =========================================================
+function saveReflection(){
+  const date=document.getElementById("reflectionDate").value;
+  const text=document.getElementById("reflectionInput").value.trim();
+  if(!date||!text) return;
+  reflections.push({date,text});
+  document.getElementById("reflectionInput").value="";
+  scheduleSave(); renderReflections();
+}
+
+function renderReflections(){
+  const container=document.getElementById("reflectionHistory");
+  container.innerHTML="";
+  [...reflections].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(item=>{
+    const ri=reflections.indexOf(item);
+    container.innerHTML+=`
+      <div class="reflection-item">
+        <strong>📅 ${item.date}</strong>
+        <p style="margin-top:8px">${item.text}</p>
+        <button class="action-btn delete-btn" style="margin-top:10px" onclick="deleteReflection(${ri})">✕ Delete</button>
+      </div>`;
+  });
+}
+function deleteReflection(i){ reflections.splice(i,1); scheduleSave(); renderReflections(); }
+
+// =========================================================
+// RENDER ALL
+// =========================================================
+function renderAll(){
+  renderDashboard();
+  renderIncome();
+  renderExpenses();
+  renderBudget();
+  renderGoals();
+  renderSubs();
+  renderReflections();
+  renderAnalytics();
+}
+
+// =========================================================
+// INIT — CEK SESSION
+// =========================================================
+sb.auth.getSession().then(async ({data:{session}})=>{
+  if(session){
+    await onLogin(session.user);
+  }
+});
+
+sb.auth.onAuthStateChange(async (event, session)=>{
+  if(event==="SIGNED_IN" && session) await onLogin(session.user);
+  if(event==="SIGNED_OUT") handleLogout();
+});
+
+if(localStorage.getItem("velora_dark")==="true") document.body.classList.add("dark");
+</script>
+
+<script>
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js");
+}
+</script>
+</body>
+</html>
